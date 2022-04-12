@@ -18,3 +18,12 @@ option(LIBXML2_WITH_THREADS "Add multithread support" OFF)
 option(LIBXML2_WITH_ZLIB "Use libz" OFF)
 add_subdirectory(libxml2)
 
+
+
+add_executable(${PROJECT_NAME}
+	converter.c
+)
+
+target_link_libraries(${PROJECT_NAME}
+	LibXml2::LibXml2
+)
