@@ -1,5 +1,7 @@
 ﻿#include "libxml/parser.h"
+#include "tlvStruct.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 
 
@@ -34,14 +36,43 @@ int main(int argc, char **argv)
 		{
 			if (node->type != XML_ELEMENT_NODE) continue;
 
-			printf("node name=%s type=%d content=%s\n", node->name, node->type, node->content);
-			xmlNode *child = node->children;
-			if (child)
+			//printf("node name=%s type=%d content=%s\n", node->name, node->type, node->content);
+
+			const xmlNode *child = node->children;
+			if (child && child->content)
 			{
-				printf("child name=%s type=%d content=%s\n", child->name, child->type, child->content);
+				//printf("child name=%s type=%d content=%s\n", child->name, child->type, child->content);
 
-				// TODO found! needs to save
+				// found! needs to save
+				const xmlChar *name = node->name;
+				const xmlChar *value = child->content;
 
+				if (xmlStrcmp(name, "text") == 0)
+				{
+					// found text record
+					size_t textLen = xmlStrlen(value);
+					struct T_TlvStructHdr hdr = {
+						.type = TypeText,
+						.length = sizeof(hdr) + textLen,
+					};
+					fwrite(&hdr, sizeof(hdr), 1, outFile);
+					fwrite(value, textLen, 1, outFile);
+				}
+				else if (xmlStrcmp(name, "numeric") == 0)
+				{
+					// found numeric record
+					int32_t number = atoi(value);
+					struct T_TlvStructHdr hdr = {
+						.type = TypeNumeric,
+						.length = sizeof(hdr) + sizeof(number),
+					};
+					fwrite(&hdr, sizeof(hdr), 1, outFile);
+					fwrite(&number, sizeof(number), 1, outFile);
+				}
+				else
+				{
+					fprintf(stderr, "Record <%s> unknown\n", name);
+				}
 			}
 		}
 	}
